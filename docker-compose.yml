@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  claudiosec:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: claudiosec
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - /var/log:/var/log:ro          # Read host logs
+      - /etc:/monitor/etc:ro          # File integrity monitoring
+      - /usr/bin:/monitor/usr/bin:ro
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - DB_PATH=/app/data/claudiosec.db
+      - NETWORK_INTERFACE=eth0
+      - WATCHED_DIRS=/monitor/etc,/monitor/usr/bin
+      - WATCHED_LOGS=/var/log/auth.log,/var/log/syslog
+      - AI_ANALYSIS_INTERVAL=30
+      - FAILED_LOGIN_THRESHOLD=5
+    cap_add:
+      - NET_ADMIN       # For packet capture
+      - NET_RAW
+    network_mode: host  # For packet sniffing
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  claudiosec_data:

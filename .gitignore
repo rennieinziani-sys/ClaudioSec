@@ -1,0 +1,10 @@
+.venv
+node_modules
+data/*.db
+*.log
+.env
+__pycache__
+*.pyc
+.pytest_cache
+build
+.history
